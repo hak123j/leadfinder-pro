@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abmeldung — LeadFinder Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg0: #07070a; --bg2: #131318; --bg4: #24242e; --accent: #7C6FFF; --green: #34D399; --red: #F87171; --text0: #FAFAFA; --text2: #A1A1AA; --text3: #71717A; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Outfit', sans-serif; background: var(--bg0); color: var(--text2); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .card { background: var(--bg2); border: 1px solid var(--bg4); border-radius: 16px; padding: 40px 32px; max-width: 440px; text-align: center; }
+        h1 { font-size: 20px; color: var(--text0); margin-bottom: 12px; }
+        p { font-size: 14px; line-height: 1.6; margin-bottom: 20px; }
+        .btn { padding: 14px 32px; background: var(--red); color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; font-family: 'Outfit', sans-serif; cursor: pointer; transition: opacity 0.2s; }
+        .btn:hover { opacity: 0.9; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .result { margin-top: 20px; padding: 14px; border-radius: 10px; font-size: 14px; display: none; }
+        .result.success { display: block; background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.3); color: var(--green); }
+        .result.error { display: block; background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); color: var(--red); }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Abmeldung</h1>
+        <p>Moechten Sie sich wirklich von unseren E-Mails abmelden? Sie erhalten dann keine weiteren Nachrichten mehr von uns.</p>
+        <button class="btn" id="btn-unsub" onclick="doUnsubscribe()">Abmelden</button>
+        <div id="result" class="result"></div>
+    </div>
+    <script>
+        async function doUnsubscribe() {
+            const btn = document.getElementById('btn-unsub');
+            const result = document.getElementById('result');
+            btn.disabled = true;
+            btn.textContent = 'Wird verarbeitet...';
+            result.className = 'result';
+            try {
+                const trackingId = '{{ tracking_id }}';
+                const token = '{{ token }}' || new URLSearchParams(window.location.search).get('token') || '';
+                const resp = await fetch('/api/unsubscribe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tracking_id: trackingId, token: token }),
+                });
+                const data = await resp.json();
+                if (data.ok) {
+                    result.textContent = 'Sie wurden erfolgreich abgemeldet. Sie erhalten keine weiteren E-Mails mehr.';
+                    result.className = 'result success';
+                    btn.style.display = 'none';
+                } else {
+                    result.textContent = data.error || 'Abmeldung fehlgeschlagen.';
+                    result.className = 'result error';
+                    btn.disabled = false;
+                    btn.textContent = 'Abmelden';
+                }
+            } catch (err) {
+                result.textContent = 'Netzwerkfehler. Bitte versuchen Sie es spaeter erneut.';
+                result.className = 'result error';
+                btn.disabled = false;
+                btn.textContent = 'Abmelden';
+            }
+        }
+    </script>
+</body>
+</html>
